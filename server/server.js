@@ -1,0 +1,66 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+require('dotenv').config();
+console.log('ENV loaded from', path.join(__dirname, '..', '.env'), 'cwd:', process.cwd());
+console.log('Has MONGODB_URI?', !!process.env.MONGODB_URI);
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
+
+const authRoutes = require('./routes/auth.routes');
+const adminRoutes = require('./routes/admin.routes');
+const productRoutes = require('./routes/product.routes');
+const bookingRoutes = require('./routes/booking.routes');
+const paymentRoutes = require('./routes/payment.routes');
+const contactRoutes = require('./routes/contact.routes');
+const reportRoutes = require('./routes/report.routes');
+
+const app = express();
+
+// Allow localhost/127.0.0.1 on any dev port plus explicit env origins
+const explicitOrigins = (process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : []).map(o => o.trim());
+const corsOrigin = (origin, cb) => {
+  if (!origin) return cb(null, true); // non-browser or same-origin
+  if (explicitOrigins.includes(origin)) return cb(null, true);
+  if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
+  if (/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return cb(null, true);
+  return cb(new Error('Not allowed by CORS'));
+};
+app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan('dev'));
+
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'JMB API' });
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/reports', reportRoutes);
+
+const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('Missing MONGODB_URI in .env');
+  process.exit(1);
+}
+
+mongoose
+  .connect(MONGODB_URI, { dbName: process.env.MONGODB_DB || 'jmb' })
+  .then(() => {
+    console.log('MongoDB connected');
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err.message);
+    process.exit(1);
+  });
