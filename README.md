@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # JMB – Online Fabric Bleaching & Dyeing Booking Platform
 
 Production-ready MERN stack app with client, admin, server, Razorpay payments, PDF reports, and MongoDB.
@@ -264,3 +265,6 @@ For issues or questions, check:
 ---
 
 **Built with ❤️ for textile industry digitization**
+=======
+# JMB
+>>>>>>> 5dac9bbcabe46118fdb48c062b841eb0bb89f23b
